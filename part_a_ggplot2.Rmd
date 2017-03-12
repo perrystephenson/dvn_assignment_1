@@ -1,0 +1,54 @@
+---
+title: "DVN Assignment 1 - Ggplot2"
+output: html_notebook
+---
+
+Assignment 1 for Data Visualisation and Narratives requires the use of three
+different visualisation tools over three weeks, presumably as part of a journey
+of discovery through different visualisation tools. For this first tool I'm 
+going to use something I already know reasonably well - Hadley Wickham's ggplot2
+package for R.
+
+The dataset I will be using for this analysis is something I've been thinking of
+looking at for a while: the Australian Road Deaths Database. I've heard a lot of
+statistics in the media which are presumably derived from this dataset, and I've
+long suspected that there are some inaccurate claims floating around the place,
+so I thought it was worth taking a look.
+
+First things first, I need to grab the dataset.
+
+```{r, warning=FALSE, message=FALSE}
+library(httr)
+library(readr)
+request <- GET("https://bitre.gov.au/statistics/safety/files/Fatalities_Jan2017.csv")
+text <- content(request, as="text")
+raw_data <- read_csv(text)
+```
+
+Then I need to do some tidying up.
+
+```{r}
+library(dplyr)
+library(lubridate)
+fatal <- 
+  raw_data %>% 
+  mutate(Date = make_datetime(Year, Month, Day, Hour, Minute),
+         Bus_Involvement               = Bus_Involvement == "Yes",
+         Heavy_Rigid_Truck_Involvement = Heavy_Rigid_Truck_Involvement == "Yes",
+         Articulated_Truck_Involvement = Articulated_Truck_Involvement == "Yes",
+         State      = as.factor(State),
+         Crash_Type = as.factor(Crash_Type),
+         Road_User  = as.factor(Road_User),
+         Gender     = as.factor(Gender)) %>% 
+  select(-Day, -Month, -Year, -Hour, -Minute)
+```
+
+The first visualisation I will use is barely even a visualisation, but I would 
+argue that a table of summary statistics counts! It certainly helps to guide the
+narrative by drawing the eye to interesting patterns.
+
+```{r}
+fatal %>% 
+  select(-CrashID, -Date) %>% 
+  summary()
+```
